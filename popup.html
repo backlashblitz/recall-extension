@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recall</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark"></div>
+      <div class="title-block">
+        <h1>Recall</h1>
+        <p class="tagline">search by meaning, not words</p>
+      </div>
+    </header>
+
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="what were you reading about..." />
+      <button id="searchBtn">Find</button>
+    </div>
+
+    <div id="resultsBox" class="results"></div>
+
+    <div class="status">
+      <span class="dot"></span>
+      <span id="statusText">Ready.</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="num" id="pageCount">0</span>
+        <span class="label">pages remembered</span>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button id="excludeSiteBtn" class="link-btn">Exclude this site</button>
+      <button id="clearAllBtn" class="link-btn danger">Clear all data</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
