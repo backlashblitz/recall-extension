@@ -1,4 +1,4 @@
-# Recall
+# Recall Chrome Extension
 
 > **AI-powered semantic search for your browsing history -- runs 100% locally in your browser.**
 
