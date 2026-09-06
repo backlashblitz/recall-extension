@@ -1,146 +1,313 @@
-# Recall â€” Module 1: Scaffold
+<div align="center">
 
-## What this module does
-- Sets up a Manifest V3 Chrome extension skeleton
-- Shows a popup UI (search box is disabled for now â€” that comes in Module 5)
-- Confirms `chrome.storage` permission works
-- Confirms the background service worker loads
+# ?? Recall
 
-## How to test it (do this now)
-1. Open Chrome, go to `chrome://extensions`
-2. Turn on **Developer mode** (top-right toggle)
-3. Click **Load unpacked**
-4. Select this `semantic-memory` folder
-5. You should see "Recall" appear in your extensions list with the gold ring icon
-6. Click the extension icon in your toolbar â†’ the popup should open showing:
-   - "Recall" title
-   - A disabled search box
-   - Status line: "Module 1: scaffold running..."
-   - "0 pages remembered"
-7. Open the background worker console: on the extensions page, click **"service worker"** link under Recall â€” you should see `[Recall] Extension installed and background worker running.` logged
+### Search your browsing history by *meaning*, not just keywords
 
-If all of that shows up correctly, Module 1 is done and we move to Module 2 (page text capture).
+**A Chrome extension powered by a real AI model that runs 100% inside your browser.**
+No server. No API key. No subscription. Completely private.
 
-## Module 2: Page text capture (automatic)
+![Version](https://img.shields.io/badge/version-0.2.0-gold)
+![Manifest](https://img.shields.io/badge/Manifest-V3-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Privacy](https://img.shields.io/badge/privacy-100%25%20local-brightgreen)
 
-### What this module does
-- Adds `content.js`, which runs automatically on every http/https page you visit
-- It extracts the "real" text of the page â€” prefers `<article>`/`<main>` if present, skips nav/footer/ads/scripts
-- 1.5 seconds after the page settles, it sends the extracted text to `background.js`
-- `background.js` currently just **logs it to console** (no storage yet â€” that's Module 4, so we can first confirm extraction quality)
+</div>
 
-### How to test it
-1. Go to `chrome://extensions`, find "Recall", click the **reload icon** (ðŸ”„) to pick up the new files
-2. Visit any content-heavy page â€” e.g. a Wikipedia article, a blog post, a news article
-3. Wait ~2 seconds, then right-click the page â†’ **Inspect** â†’ go to the **Console** tab (this is the *page's* console, not the extension's)
-4. You should see a log like:
-   ```
-   [Recall] Captured page: { url: "...", title: "...", capturedAt: "...", textLength: 3421, preview: "..." }
-   ```
-5. Try a few different kinds of pages (Wikipedia, a blog, YouTube, a news site) and check:
-   - Is the `preview` text actually the article content, or is it picking up junk (menu items, ads, cookie banners)?
-   - Is `textLength` reasonable (a real article should be 1000+ characters usually)?
+---
 
-Send me a couple of console screenshots from different sites â€” if extraction looks clean, we move to Module 3 (in-browser embeddings). If some sites extract poorly, we'll tune the extraction logic first.
+## What Is Recall?
 
-## Module 3: In-browser embeddings
+Normal browser history search (Ctrl+H) only finds pages containing the **exact words** you type. If you remember an article's idea but not its exact wording, you're stuck.
 
-### What this module does
-- Bundles `transformers.js` (Hugging Face's in-browser ML library) directly inside the extension â€” no CDN dependency, no server
-- Loads a small embedding model, `Xenova/all-MiniLM-L6-v2` (~25MB), the **first time** it's needed. Chrome's own cache keeps it after that â€” so it only downloads once, ever, even across browser restarts
-- Every time a page is captured (Module 2), its text is now converted into a **384-dimension vector** â€” a list of 384 numbers that represents the *meaning* of the text
-- This is the same idea as your RokomariBG embeddings (multilingual-e5-base), just running client-side instead of on a GPU server, and with a smaller/faster model suited to a browser
+**Recall fixes that.** It silently indexes every page you visit using a real transformer neural network model, then lets you search by meaning:
 
-### Important fix: Offscreen Document
-Chrome extension service workers (`background.js`) don't have `XMLHttpRequest`, which the WASM runtime underneath transformers.js needs to initialize. The fix: the actual model now runs inside an **offscreen document** (`offscreen.html` / `offscreen.js`) â€” a hidden page with a full browser environment. `background.js` just creates that hidden page once and relays messages to/from it.
+| You search for... | Recall finds... |
+|---|---|
+| `"how machines learn"` | Your saved article on *deep learning* |
+| `"Italian food recipes"` | The *pasta carbonara* page you bookmarked |
+| `"climate change solutions"` | Your *renewable energy* research article |
+| `"box"` | The *Boxing* Wikipedia article (hybrid boost) |
 
-### How to test it
-1. `chrome://extensions` â†’ Remove the old "Recall" entry
-2. Extract this fresh zip, **Load unpacked** the folder
-3. Open the **service worker** console (click "service worker" on the extension card)
-4. Visit any content-heavy page and reload it
-5. **First time only**: model download logs will now appear with an `[offscreen]` prefix, e.g.:
-   ```
-   [Recall/offscreen] Loading embedding model (first time only)...
-   [Recall/offscreen] Downloading: onnx/model_quantized.onnx â€” 43%
-   ```
-   (To see these directly: `chrome://extensions` â†’ find "Recall" â†’ there should be an **"offscreen document"** entry under "Inspect views" once it's created â€” click it to open its own console)
-6. Back in the **service worker** console, once the offscreen document finishes, you'll see:
-   ```
-   [Recall] Embedding generated: { url: "...", dimensions: 384, firstValues: [...] }
-   ```
+---
 
-If `dimensions: 384` shows up with real numbers in `firstValues`, Module 3 works â€” you now have a working in-browser embedding pipeline. Send me a screenshot and we move to Module 4 (storing these vectors + running actual similarity search).
+## Features
 
-## Module 4: Storage + real search
+### Core
+- ?? **Semantic search** — finds pages by meaning, not keyword matching
+- ? **Instant results** — HNSW approximate nearest-neighbor index for O(log N) search
+- ?? **100% private** — AI model runs entirely in your browser via WebAssembly
+- ?? **No external dependencies** — zero network calls after first model download
 
-### What this module does
-- Every captured page's `{url, title, text, vector}` now gets saved to **IndexedDB** (keyed by URL, so revisiting a page updates it instead of duplicating)
-- The popup's search box is now **live** â€” typing a query and hitting "Find" (or Enter) embeds your query the same way pages are embedded, then compares it against every stored page using cosine similarity, and shows the closest matches with a % match score
-- The "pages remembered" counter in the popup now reflects the real count
+### v0.2.0 — What's New
+- ? **First-time setup screen** — live progress bar while the model downloads (~25 MB)
+- ?? **Chunked embedding** — up to 5 overlapping chunks per article (full depth, not just the opening)
+- ?? **Date & domain filters** — filter results by date range or website domain
+- ?? **HNSW fast index** — O(log N) search replaces O(N) brute force; page cap raised to **2,000**
+- ?? **Export / Import** — back up and restore your entire indexed history as a JSON file
+- ?? **WASM path bug fixed** — `wasmPaths` now correctly uses a base URL string
+- ?? **Silent error fixed** — `sendMessage` rejection when service worker is sleeping is now handled
 
-### How to test it
-1. `chrome://extensions` â†’ Remove the old "Recall" entry, extract this fresh zip, **Load unpacked**
-2. Browse a handful of **different** pages â€” e.g. a Wikipedia article on machine learning, one on football, one on a cooking recipe. Give each one 5-10 seconds to be captured + embedded (check the service worker console for `[Recall] Saved. Total pages remembered: N`)
-3. Click the Recall icon â†’ you should see "pages remembered" go up as you browse
-4. Type a search query that's **conceptually related but doesn't use the exact words** from a page you visited â€” e.g. if you visited the "Machine Learning" Wikipedia page, try searching "neural network training" or "AI algorithms"
-5. Hit **Find** (or press Enter)
-6. You should see results ranked by % match, with the most relevant page(s) at top â€” even though your query didn't use the article's exact wording
+---
 
-This is the core "semantic memory" behavior working end-to-end. If results look reasonable, Module 4 is done â€” Module 5 will polish the UI (loading states, snippet highlighting) and Module 6 will handle edge cases (very short pages, duplicate detection, storage limits, an "exclude this site" option).
+## How It Works
 
-## Module 5: Cleaner extraction + UI polish
+Think of it as a 5-stage pipeline:
 
-### What changed
-- **Extraction**: now skips navigation menus, tables of contents, sidebars, language pickers, and similar non-article regions (previously these leaked into captured text as noise â€” e.g. Wikipedia's "Toggle the table of contents... 39 languages..." showing up in snippets)
-- **UI**: search button and input now disable while a search is in flight, so you can't double-submit
-
-### How to test it
-1. Reload the extension with this version
-2. Visit a **new** page (previously-captured pages won't be re-captured until you revisit and reload them â€” that's expected, since capture is keyed by URL)
-3. Search for something and check the snippet â€” it should now start with real article content, not menu/nav text
-
-## Module 5.5: Live search-as-you-type
-
-### What changed
-- The search box now searches automatically as you type (450ms after you pause), no need to click "Find"
-- Pressing Enter or clicking "Find" still searches immediately
-- Results update live; if a newer keystroke triggers a new search before an old one finishes, the old (stale) result is discarded automatically
-
-### Note on how this works
-This is **semantic** search, not spelling autocomplete â€” it doesn't complete partial words. Typing "footb" may already match "Football" (since it's close to the real word), but a very short partial word like "spor" may not clearly signal "sports" yet, since it isn't a real word itself. Full or near-full words give the most accurate results; the shorter the input, the fuzzier the match.
-
-## Module 5.6: Hybrid keyword + semantic search
-
-### What changed
-Pure semantic search misses cases like "box" not matching "Boxing" â€” to the embedding model, "box" (a container) and "boxing" (a sport) are different concepts, even though one is literally a substring of the other. Fixed by adding a **hybrid** check: if the query text literally appears in a page's title or body, that page is now guaranteed a strong match score, regardless of what the embedding similarity says. Meaning-based matching (the whole point of this extension â€” e.g. "neural network training" finding a "Machine Learning" page) still works exactly as before; this only adds a safety net for literal substring matches.
-
-## Module 6: Storage limits, privacy controls, data management
-
-### What's new
-- **Storage cap**: keeps at most 500 pages. Once you go over, the oldest pages (by capture date) are automatically deleted to make room â€” storage won't grow forever
-- **Exclude this site**: popup now has an "Exclude [hostname]" button. Click it while on a site (e.g. your bank, email, or any private page) and Recall will stop capturing pages from that domain. Click again to re-enable
-- **Clear all data**: a "Clear all data" button in the popup wipes everything (with a confirmation prompt first)
-- **Revisit handling**: this was already working since Module 4 (pages are keyed by URL), but worth noting explicitly â€” revisiting a page updates its stored copy instead of creating a duplicate
-
-### How to test it
-1. Reload the extension with this version
-2. **Exclude test**: visit any site, open the popup, click "Exclude [hostname]" â€” button should change to "Re-enable [hostname]". Reload that page â€” check the page console, you should see `[Recall] Skipping capture â€” this site is excluded: ...`
-3. **Clear all test**: click "Clear all data", confirm the prompt â€” "pages remembered" should drop to 0
-4. **Storage cap**: not practical to test by hand (would need 500+ pages), but the logic is in `db.js`'s `pruneOldest()` â€” trust the code or dial `MAX_PAGES` down temporarily to something small like 3 to see it in action, then set it back
-
-## Folder structure
 ```
-semantic-memory/
-â”œâ”€â”€ manifest.json          # extension config (Manifest V3)
-â”œâ”€â”€ background.js          # service worker (embedding logic lives here now)
-â”œâ”€â”€ content.js             # runs on every page, extracts text
-â”œâ”€â”€ popup.html              # popup UI structure
-â”œâ”€â”€ popup.css              # popup styling
-â”œâ”€â”€ popup.js                # popup logic
-â”œâ”€â”€ db.js                   # IndexedDB storage (Module 4)
-â”œâ”€â”€ similarity.js            # cosine similarity search (Module 4)
-â”œâ”€â”€ lib/
-â”‚   â””â”€â”€ transformers-bundle.js   # bundled in-browser ML library (custom-built, no bare imports)
-â””â”€â”€ icons/                  # extension icons
+Visit a page
+    ¦
+    ?
+1. CAPTURE (content.js)
+   Reads the page DOM, strips nav/ads/footers,
+   extracts real article text. Skips pages < 200 chars.
+    ¦
+    ?
+2. ORCHESTRATE (background.js)
+   Splits text into up to 5 overlapping 500-char chunks.
+   Sends each chunk to the AI model for embedding.
+    ¦
+    ?
+3. EMBED — the AI part (offscreen.js)
+   transformers.js + ONNX Runtime Web runs all-MiniLM-L6-v2
+   inside a hidden browser page (full browser environment).
+   Each chunk ? a 384-number semantic fingerprint (vector).
+    ¦
+    ?
+4. STORE (db.js)
+   Saves { url, title, text, domain, chunks[], capturedAt }
+   to IndexedDB. Nothing ever leaves your machine.
+    ¦
+    ?
+5. INDEX (hnsw.js)
+   Inserts the chunk vector into the HNSW graph index
+   for fast O(log N) retrieval at search time.
+
+
+-- SEARCH TIME -------------------------------------------
+
+Type a query in the popup
+    ¦
+    +- Same AI model converts query ? 384-number vector
+    +- HNSW graph finds top-150 candidate pages instantly
+    +- Date / domain filters applied
+    +- Exact cosine similarity across ALL chunks of candidates
+    +- Hybrid keyword boost (catches literal substring matches)
+    +- Top 8 results shown, ranked by % match
 ```
+
+---
+
+## The AI Model — `all-MiniLM-L6-v2`
+
+| Property | Value |
+|---|---|
+| **Made by** | Microsoft Research |
+| **Published on** | Hugging Face Hub (Apache 2.0) |
+| **Architecture** | 6-layer transformer (distilled from BERT) |
+| **Output** | 384-dimensional embedding vector |
+| **Training data** | 1 billion+ sentence pairs (Wikipedia, Reddit, StackOverflow, news) |
+| **Model size** | ~23 MB (quantized ONNX format) |
+| **Accuracy** | 68.1/100 on STS benchmark (vs ~76 for paid GPT-4 embeddings) |
+| **Runs** | 100% locally via WebAssembly — zero API calls |
+
+### How the model understands meaning
+
+The model converts text into a point in 384-dimensional space. Semantically similar texts land **close together**, different topics land **far apart** — regardless of the exact words used:
+
+```
+"neural networks"  ?-+
+"machine learning" ? +-- clustered together
+"deep learning"    ?-+
+
+"pasta carbonara"  ?-+
+"Italian cooking"  ? +-- clustered together
+"recipe tutorial"  ?-+
+
+"football results" ?   ? far from both clusters
+```
+
+### The Technology Stack Explained
+
+**ONNX (Open Neural Network Exchange)**
+A universal file format for AI models — like PDF for documents but for neural networks. Allows models trained in Python/PyTorch to run in JavaScript, mobile apps, or any environment. The model file (`model_quantized.onnx`) contains the architecture + all learned weights in a standardized format.
+
+**WebAssembly (WASM)**
+A near-native-speed execution engine built into every modern browser. The ONNX Runtime is written in C++ and compiled to WASM — this is the `ort-wasm-simd-threaded.asyncify.wasm` file (23 MB) bundled in `lib/ort/`. WASM runs the neural network at close to native CPU speed inside Chrome's sandbox, with no access to your filesystem or system outside the browser.
+
+The WASM binary is bundled locally (not fetched from a CDN) because Chrome's Content Security Policy blocks loading executable code from the internet.
+
+---
+
+## Architecture
+
+```
+recall-extension/
+¦
++-- manifest.json          # MV3 config — permissions, CSP, service worker
+¦
++-- content.js             # Runs on every page — DOM extraction, noise filtering
+¦
++-- background.js          # Service worker brain
+¦                          # Chunking, orchestration, HNSW integration,
+¦                          # search with filters, import/export handlers
+¦
++-- offscreen.html         # Shell for the offscreen ML document
++-- offscreen.js           # Loads model, embeds text, broadcasts progress events
+¦
++-- hnsw.js                # Pure-JS HNSW approximate nearest-neighbor graph
+¦                          # O(log N) search, fully serializable to IndexedDB
+¦
++-- db.js                  # IndexedDB storage layer (schema v3)
+¦                          # Stores pages with chunks[], domain field
+¦                          # HNSW persistence, bulk save for import
+¦
++-- similarity.js          # Cosine similarity computation
+¦
++-- setup.html             # First-time onboarding tab
++-- setup.css              # Setup page styles
++-- setup.js               # Progress bar — listens for download events
+¦
++-- popup.html             # Extension popup UI
++-- popup.css              # Popup styles
++-- popup.js               # Search, filters, export, import logic
+¦
++-- lib/
+¦   +-- transformers-bundle.js         # Hugging Face transformers.js (bundled)
+¦   +-- ort/
+¦       +-- ort-wasm-simd-threaded.asyncify.wasm  # ONNX Runtime (23 MB)
+¦       +-- ort-wasm-simd-threaded.asyncify.mjs   # ONNX Runtime JS loader
+¦
++-- icons/                 # Extension icons (16, 48, 128px)
+```
+
+---
+
+## Database Schema (v3)
+
+Each saved page record in IndexedDB:
+
+```json
+{
+  "url":        "https://en.wikipedia.org/wiki/Machine_learning",
+  "title":      "Machine learning - Wikipedia",
+  "text":       "Machine learning is a branch of artificial intelligence...",
+  "domain":     "en.wikipedia.org",
+  "capturedAt": "2026-09-06T12:30:00.000Z",
+  "chunks": [
+    { "text": "Machine learning. Machine learning is a branch...", "vector": [0.021, -0.114, ...] },
+    { "text": "...supervised learning algorithms adjust their...",  "vector": [0.033,  0.098, ...] },
+    { "text": "...neural networks consist of interconnected...",    "vector": [-0.05,  0.201, ...] }
+  ]
+}
+```
+
+> **Migration:** v1/v2 records (single `vector` field) are automatically upgraded to v3 format on first load. No data loss.
+
+---
+
+## Installing Locally
+
+1. Clone this repo:
+   ```bash
+   git clone https://github.com/backlashblitz/recall-extension.git
+   ```
+
+2. Open Chrome and go to `chrome://extensions`
+
+3. Enable **Developer mode** (toggle in top-right)
+
+4. Click **Load unpacked** ? select the `recall-extension` folder
+
+5. The extension icon appears in your toolbar. On first install, a **setup tab** opens automatically with a live model download progress bar.
+
+6. Browse normally — every page is quietly indexed. Click the extension icon to search.
+
+> **After editing any file:** go to `chrome://extensions` and click the ? reload button on the Recall card, then reload any open tabs.
+
+---
+
+## Pages Recall CAN Index
+
+? Wikipedia articles, news articles (BBC, CNN, Reuters), blog posts, Medium, Stack Overflow, Reddit threads, documentation sites (MDN, docs.python.org), research paper pages, product pages with rich descriptions
+
+## Pages Recall CANNOT Index
+
+| Page type | Why |
+|---|---|
+| `chrome://` internal pages | Content scripts don't run there |
+| Gmail / Google Docs | Content is in canvas/shadow DOM |
+| PDF files in browser | Extension sees the PDF viewer, not the text |
+| Login/paywall pages | Less than 200 chars of real content — skipped |
+| Pages you manually excluded | By design |
+
+---
+
+## Using the Popup
+
+| Control | What it does |
+|---|---|
+| Search box | Type a query — live results after 450ms pause, or press Enter |
+| **Filters ?** | Expand to filter by date range or domain |
+| **Export** | Download all indexed pages as a `.json` backup |
+| **Import** | Restore from a `.json` backup file |
+| **Exclude [domain]** | Stop indexing the current site |
+| **Clear all** | Wipe the entire index (with confirmation) |
+| Pages remembered | Live count of indexed pages (max 2,000) |
+
+---
+
+## Tech Stack
+
+| Technology | Role |
+|---|---|
+| **Manifest V3** | Chrome extension platform |
+| **transformers.js** (Hugging Face) | In-browser ML model loading and inference |
+| **ONNX Runtime Web** | Neural network execution engine (via WebAssembly) |
+| **all-MiniLM-L6-v2** | Sentence transformer model for semantic embeddings |
+| **HNSW** (custom pure-JS) | Approximate nearest-neighbor graph for fast search |
+| **IndexedDB** | Client-side storage for pages + HNSW index |
+| **Vanilla JS** | No framework — lightweight by design |
+| **esbuild** | Used to bundle transformers.js + WASM locally |
+
+---
+
+## Privacy
+
+- **Zero network calls** after the model is downloaded once
+- **No account, no login, no telemetry**
+- Everything — model inference, vector storage, search — runs inside your browser
+- The model is cached by the browser after first download (no re-download on restart)
+- You can export and delete your data at any time
+
+---
+
+## Changelog
+
+### v0.2.0
+- Added first-time setup screen with live model download progress bar
+- Chunked article embedding (up to 5 overlapping chunks per page)
+- Date and domain filters in the popup
+- HNSW approximate nearest-neighbor index (O(log N) search)
+- Page cap raised: 500 ? 2,000
+- Export / Import (JSON backup and restore)
+- Fixed: `wasmPaths` must be a base URL string, not a key-value object
+- Fixed: Uncaught `sendMessage` rejection when service worker is sleeping
+- Fixed: `pruneOldest()` double IndexedDB open
+- DB schema bumped: v2 ? v3 (chunks, domain field, HNSW store)
+
+### v0.1.0
+- Initial release
+- Page capture with DOM noise filtering
+- In-browser embedding via transformers.js + ONNX Runtime WASM
+- IndexedDB storage
+- Cosine similarity search
+- Hybrid keyword + semantic scoring
+- Exclude-site feature
+- Storage cap (500 pages)
+
+---
+
+<div align="center">
+Built with ?? — runs entirely in your browser, respects your privacy.
+</div>

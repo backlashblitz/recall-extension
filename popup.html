@@ -16,8 +16,36 @@
     </header>
 
     <div class="search-row">
-      <input type="text" id="searchInput" placeholder="what were you reading about..." />
+      <input type="text" id="searchInput" placeholder="what were you reading about..." autocomplete="off" />
       <button id="searchBtn">Find</button>
+    </div>
+
+    <!-- Filter toggle -->
+    <div class="filter-toggle-row">
+      <button id="filterToggle" class="filter-toggle" aria-expanded="false">
+        <span class="filter-icon">?</span> Filters
+        <span id="filterCaret" class="caret">?</span>
+      </button>
+      <span id="filterActiveTag" class="filter-active-tag hidden">active</span>
+    </div>
+
+    <!-- Collapsible filter panel -->
+    <div id="filterPanel" class="filter-panel" aria-hidden="true">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label for="fromDate">From</label>
+          <input type="date" id="fromDate" />
+        </div>
+        <div class="filter-field">
+          <label for="toDate">To</label>
+          <input type="date" id="toDate" />
+        </div>
+        <div class="filter-field filter-field--full">
+          <label for="domainFilter">Domain</label>
+          <input type="text" id="domainFilter" placeholder="e.g. reddit.com" autocomplete="off" />
+        </div>
+      </div>
+      <button id="clearFiltersBtn" class="link-btn small">Clear filters</button>
     </div>
 
     <div id="resultsBox" class="results"></div>
@@ -36,7 +64,11 @@
 
     <div class="footer-actions">
       <button id="excludeSiteBtn" class="link-btn">Exclude this site</button>
-      <button id="clearAllBtn" class="link-btn danger">Clear all data</button>
+      <div class="footer-right">
+        <button id="exportBtn" class="link-btn">Export</button>
+        <button id="importBtn" class="link-btn">Import</button>
+        <button id="clearAllBtn" class="link-btn danger">Clear all</button>
+      </div>
     </div>
   </div>
   <script src="popup.js"></script>

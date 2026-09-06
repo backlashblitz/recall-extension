@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recall — First-Time Setup</title>
+  <link rel="stylesheet" href="setup.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+
+      <header class="card-header">
+        <div class="logo-mark"></div>
+        <div>
+          <h1 class="logo-name">Recall</h1>
+          <p class="logo-tag">search by meaning, not words</p>
+        </div>
+      </header>
+
+      <!-- Loading state -->
+      <div id="stateLoading" class="state">
+        <p class="state-title">Loading AI Model</p>
+        <p class="state-sub">
+          The first-time setup downloads a ~25 MB neural network model to your
+          device. This happens <strong>once only</strong> — the model is then
+          cached in your browser forever.
+        </p>
+
+        <div class="progress-block">
+          <div class="progress-track">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progressFile" class="progress-file">Initializing…</span>
+            <span id="progressPct" class="progress-pct">0 %</span>
+          </div>
+        </div>
+
+        <div class="privacy-pill">
+          <span>??</span>
+          <span>100 % private — model runs on your device, nothing sent to any server.</span>
+        </div>
+      </div>
+
+      <!-- Ready state (hidden until model is loaded) -->
+      <div id="stateReady" class="state hidden">
+        <div class="checkmark" aria-hidden="true">?</div>
+        <p class="state-title">You're all set!</p>
+        <p class="state-sub">
+          Recall is now active. Browse normally — every page you visit is quietly
+          indexed. Open the extension popup to search your history by meaning.
+        </p>
+        <button id="closeBtn" class="close-btn">Close this tab</button>
+      </div>
+
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feat-icon">?</span>
+        <span>Instant semantic search across all your browsing</span>
+      </div>
+      <div class="feature">
+        <span class="feat-icon">??</span>
+        <span>Finds pages by meaning, not exact keywords</span>
+      </div>
+      <div class="feature">
+        <span class="feat-icon">??</span>
+        <span>Fully private — everything stays inside your browser</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="setup.js"></script>
+</body>
+</html>

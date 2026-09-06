@@ -71,6 +71,10 @@
       return;
     }
 
+    // The service worker may be asleep when this fires. Chrome will throw
+    // "Could not establish connection. Receiving end does not exist." in that
+    // case — that's benign (the SW wakes up on next message). Silence it so
+    // it doesn't pollute the extension's error panel.
     chrome.runtime.sendMessage({
       type: "PAGE_CAPTURED",
       payload: {
@@ -79,7 +83,7 @@
         text: text,
         capturedAt: new Date().toISOString()
       }
-    });
+    }).catch(() => {});
   }
 
   // Page is already idle by the time this script runs (run_at: document_idle),

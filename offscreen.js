@@ -32,10 +32,10 @@ env.useBrowserCache = true;
 // Critical fix: by default, onnxruntime-web tries to fetch its WASM runtime
 // from a CDN (jsdelivr). That's blocked by the extension's Content Security
 // Policy. We bundled those files locally (lib/ort/) — point to them instead.
-env.backends.onnx.wasm.wasmPaths = {
-  wasm: chrome.runtime.getURL("lib/ort/ort-wasm-simd-threaded.asyncify.wasm"),
-  mjs: chrome.runtime.getURL("lib/ort/ort-wasm-simd-threaded.asyncify.mjs")
-};
+// IMPORTANT: wasmPaths must be a BASE URL string (directory, trailing slash
+// required). ORT's wasm loader appends filenames itself. Passing a key-value
+// object looks plausible but silently breaks on most ORT versions.
+env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL("lib/ort/");
 
 const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
 
@@ -46,10 +46,25 @@ function getEmbedder() {
     console.log("[Recall/offscreen] Loading embedding model (first time only)...");
     embedderPromise = pipeline("feature-extraction", EMBEDDING_MODEL, {
       progress_callback: (progress) => {
-        if (progress.status === "progress") {
-          console.log(`[Recall/offscreen] Downloading: ${progress.file} — ${Math.round(progress.progress || 0)}%`);
+        if (progress.status === "progress" || progress.status === "done") {
+          // Broadcast to background.js and any listening extension pages (e.g. setup tab)
+          chrome.runtime.sendMessage({
+            type:     "MODEL_DOWNLOAD_PROGRESS",
+            file:     progress.file,
+            progress: progress.progress ?? 0,
+            status:   progress.status
+          }).catch(() => {}); // ignore if no listeners
+
+          if (progress.status === "progress") {
+            console.log(`[Recall/offscreen] Downloading: ${progress.file} — ${Math.round(progress.progress || 0)}%`);
+          }
         }
       }
+    }).then(pipe => {
+      // Notify all extension pages that the model is fully ready
+      chrome.runtime.sendMessage({ type: "MODEL_READY" }).catch(() => {});
+      console.log("[Recall/offscreen] Model ready.");
+      return pipe;
     });
   }
   return embedderPromise;

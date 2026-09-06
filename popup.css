@@ -1,10 +1,12 @@
 :root {
-  --ink: #14141f;
-  --ink-2: #1c1c2b;
+  --ink:       #14141f;
+  --ink-2:     #1c1c2b;
+  --ink-3:     #252538;
   --parchment: #ece6d6;
-  --gold: #c9a227;
-  --gold-dim: #8a7220;
-  --line: #33334a;
+  --gold:      #c9a227;
+  --gold-dim:  #8a7220;
+  --line:      #33334a;
+  --muted:     #9b9bb0;
 }
 
 * { box-sizing: border-box; }
@@ -17,10 +19,9 @@ body {
   font-family: "Georgia", "Iowan Old Style", serif;
 }
 
-.wrap {
-  padding: 18px 20px 20px;
-}
+.wrap { padding: 18px 20px 20px; }
 
+/* -- Header ------------------------------------------------------------ */
 header {
   display: flex;
   align-items: center;
@@ -29,8 +30,7 @@ header {
 }
 
 .mark {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   border: 2px solid var(--gold);
   flex-shrink: 0;
@@ -39,10 +39,8 @@ header {
 .mark::after {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2px;
-  height: 8px;
+  top: 50%; left: 50%;
+  width: 2px; height: 8px;
   background: var(--gold);
   transform: translate(-50%, -100%);
 }
@@ -62,10 +60,11 @@ header {
   letter-spacing: 0.03em;
 }
 
+/* -- Search row -------------------------------------------------------- */
 .search-row {
   display: flex;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 #searchInput {
@@ -78,15 +77,8 @@ header {
   font-size: 12px;
   border-radius: 3px;
 }
-
-#searchInput::placeholder {
-  color: #6b6b82;
-}
-
-#searchInput:disabled, #searchBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
+#searchInput::placeholder { color: #6b6b82; }
+#searchInput:disabled, #searchBtn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 #searchBtn {
   background: var(--gold);
@@ -100,8 +92,100 @@ header {
   font-family: "Courier New", monospace;
 }
 
+/* -- Filter toggle row -------------------------------------------------- */
+.filter-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.filter-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.filter-toggle:hover { color: var(--parchment); border-color: var(--gold-dim); }
+
+.caret {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 9px;
+}
+.filter-toggle[aria-expanded="true"] .caret { transform: rotate(180deg); }
+
+.filter-active-tag {
+  font-size: 9px;
+  font-family: "Courier New", monospace;
+  background: var(--gold-dim);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+.filter-active-tag.hidden { display: none; }
+
+/* -- Filter panel ------------------------------------------------------- */
+.filter-panel {
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 12px 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  max-height: 0;
+  padding-top: 0; padding-bottom: 0;
+  opacity: 0;
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
+}
+.filter-panel.open {
+  max-height: 200px;
+  padding: 12px 12px 8px;
+  opacity: 1;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filter-field { display: flex; flex-direction: column; gap: 3px; }
+.filter-field--full { grid-column: 1 / -1; }
+
+.filter-field label {
+  font-size: 9px;
+  font-family: "Courier New", monospace;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.filter-field input {
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  color: var(--parchment);
+  padding: 5px 7px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  border-radius: 3px;
+  width: 100%;
+}
+.filter-field input::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+
+/* -- Results ----------------------------------------------------------- */
 .results {
-  max-height: 280px;
+  max-height: 260px;
   overflow-y: auto;
   margin-bottom: 12px;
 }
@@ -116,10 +200,7 @@ header {
   text-decoration: none;
   color: var(--parchment);
 }
-
-.result:hover {
-  border-color: var(--gold-dim);
-}
+.result:hover { border-color: var(--gold-dim); }
 
 .result-title {
   font-size: 12px;
@@ -129,17 +210,25 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .result-snippet {
   font-size: 11px;
   color: #b5b5c8;
   line-height: 1.4;
   margin-bottom: 4px;
 }
-
+.result-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .result-score {
   font-size: 10px;
   color: var(--gold);
+  font-family: "Courier New", monospace;
+}
+.result-domain {
+  font-size: 10px;
+  color: #6b6b82;
   font-family: "Courier New", monospace;
 }
 
@@ -151,12 +240,13 @@ header {
   padding: 14px 0;
 }
 
+/* -- Status ------------------------------------------------------------ */
 .status {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  color: #9b9bb0;
+  color: var(--muted);
   font-family: "Courier New", monospace;
   border-top: 1px solid var(--line);
   padding-top: 12px;
@@ -164,22 +254,16 @@ header {
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--gold);
   flex-shrink: 0;
 }
 
-.stats {
-  display: flex;
-  gap: 20px;
-}
+/* -- Stats ------------------------------------------------------------- */
+.stats { display: flex; gap: 20px; }
 
-.stat {
-  display: flex;
-  flex-direction: column;
-}
+.stat { display: flex; flex-direction: column; }
 
 .num {
   font-size: 22px;
@@ -190,39 +274,35 @@ header {
 
 .label {
   font-size: 10px;
-  color: #9b9bb0;
+  color: var(--muted);
   font-family: "Courier New", monospace;
   letter-spacing: 0.02em;
 }
 
+/* -- Footer actions ---------------------------------------------------- */
 .footer-actions {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 
+.footer-right { display: flex; gap: 8px; align-items: center; }
+
 .link-btn {
   background: none;
   border: none;
-  color: #9b9bb0;
+  color: var(--muted);
   font-family: "Courier New", monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 4px 0;
   text-decoration: underline;
 }
-
-.link-btn:hover {
-  color: var(--gold);
-}
-
-.link-btn.danger:hover {
-  color: #d9694f;
-}
-
-.link-btn.active {
-  color: var(--gold);
-  font-weight: 700;
-}
+.link-btn:hover          { color: var(--gold); }
+.link-btn.danger:hover   { color: #d9694f; }
+.link-btn.active         { color: var(--gold); font-weight: 700; }
+.link-btn.small          { font-size: 9px; text-decoration: none; color: #6b6b82; }
+.link-btn.small:hover    { color: var(--muted); }
