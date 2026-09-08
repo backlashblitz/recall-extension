@@ -183,11 +183,16 @@ async function handleSearch(query, filters = {}) {
       if (s > semanticScore) semanticScore = s;
     }
 
-    // Hybrid keyword boost (preserves the "box" -> "Boxing" use case)
+    // Hybrid keyword boost -- additive, not a hard floor.
+    // Title match = strong signal (the page is specifically about this topic).
+    // Body text match = weak signal (word just happens to appear somewhere).
+    // Using additive boost means semantic score still determines ranking order
+    // when multiple pages share the same keyword.
     const titleLower     = (page.title ?? "").toLowerCase();
-    const isKeywordMatch = titleLower.includes(queryLower) ||
-                           page.text.toLowerCase().includes(queryLower);
-    const score = isKeywordMatch ? Math.max(semanticScore, 0.5) : semanticScore;
+    const inTitle = titleLower.includes(queryLower);
+    const inBody  = !inTitle && page.text.toLowerCase().includes(queryLower);
+    const boost   = inTitle ? 0.35 : (inBody ? 0.08 : 0);
+    const score   = Math.min(1.0, semanticScore + boost);
 
     return {
       url:   page.url,
