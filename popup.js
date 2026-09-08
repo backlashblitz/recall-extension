@@ -1,4 +1,4 @@
-// popup.js — Recall v0.2.0 popup UI.
+// popup.js -- Recall v0.2.0 popup UI.
 // New in v0.2.0: date/domain filters, export data, import data.
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       statusText.textContent = "All data cleared.";
       await refreshStats();
     } else {
-      statusText.textContent = "Failed to clear data — see console.";
+      statusText.textContent = "Failed to clear data -- see console.";
     }
   });
 
@@ -112,10 +112,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // -- Export -------------------------------------------------------------
   exportBtn.addEventListener("click", async () => {
-    statusText.textContent = "Exporting…";
+    statusText.textContent = "Exporting--";
     const response = await chrome.runtime.sendMessage({ type: "EXPORT_DATA" });
     if (!response?.ok) {
-      statusText.textContent = "Export failed — see console.";
+      statusText.textContent = "Export failed -- see console.";
       return;
     }
 
@@ -143,12 +143,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const file = e.target.files[0];
       if (!file) return;
 
-      statusText.textContent = "Importing…";
+      statusText.textContent = "Importing--";
       let data;
       try {
         data = JSON.parse(await file.text());
       } catch {
-        statusText.textContent = "Invalid file — could not parse JSON.";
+        statusText.textContent = "Invalid file -- could not parse JSON.";
         return;
       }
 
@@ -163,11 +163,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (response?.ok) {
-        statusText.textContent = `Imported ${response.count} page(s). Rebuilding index…`;
+        statusText.textContent = `Imported ${response.count} page(s). Rebuilding index--`;
         await refreshStats();
-        statusText.textContent = `Import complete — ${response.count} pages restored.`;
+        statusText.textContent = `Import complete -- ${response.count} pages restored.`;
       } else {
-        statusText.textContent = "Import failed — see console.";
+        statusText.textContent = "Import failed -- see console.";
       }
     };
     input.click();
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       searchBtn.disabled   = true;
       searchInput.disabled = true;
     }
-    statusText.textContent = "Searching…";
+    statusText.textContent = "Searching--";
 
     const response = await chrome.runtime.sendMessage({
       type:    "SEARCH_QUERY",
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const filterNote = filtersAreActive() ? " (filtered)" : "";
       statusText.textContent = `Found ${response.results.length} match(es)${filterNote}.`;
     } else {
-      statusText.textContent = "Search failed — see console for details.";
+      statusText.textContent = "Search failed -- see console for details.";
       console.error("[Recall/popup] Search failed:", response?.error);
     }
   }
@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearTimeout(debounceTimer);
     const query = searchInput.value.trim();
     if (query.length < 2) { resultsBox.innerHTML = ""; statusText.textContent = "Ready."; return; }
-    statusText.textContent = "Typing…";
+    statusText.textContent = "Typing--";
     debounceTimer = setTimeout(() => runSearch(true), 450);
   }
 

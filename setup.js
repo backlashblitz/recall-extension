@@ -1,4 +1,4 @@
-// setup.js — First-time onboarding page script.
+// setup.js -- First-time onboarding page script.
 // Triggers model warm-up and displays live download progress.
 
 const stateLoading  = document.getElementById("stateLoading");
@@ -56,9 +56,9 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 // Kick off model loading via background.js (which opens the offscreen doc and
-// runs a warm-up embed — progress events will flow back here automatically).
+// runs a warm-up embed -- progress events will flow back here automatically).
 chrome.runtime.sendMessage({ type: "WARM_UP_MODEL" }).catch(() => {
-  // Background SW may not be ready yet — retry once after a short delay.
+  // Background SW may not be ready yet -- retry once after a short delay.
   setTimeout(() => {
     chrome.runtime.sendMessage({ type: "WARM_UP_MODEL" }).catch(() => {});
   }, 1000);
