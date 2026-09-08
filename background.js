@@ -1,4 +1,4 @@
-// background.js — Central service worker / orchestrator for Recall v0.2.0.
+// background.js ï¿½ Central service worker / orchestrator for Recall v0.2.0.
 //
 // Responsibilities:
 //   1. Open first-time setup tab on fresh install
@@ -22,7 +22,7 @@ import { HNSW } from "./hnsw.js";
 // -- Constants -------------------------------------------------------------
 
 const MAX_PAGES  = 2000;       // raised from 500 now that we have HNSW
-const MIN_SCORE  = 0.05;       // filter out clearly-irrelevant results
+const MIN_SCORE  = 0.25;       // raised: filters out noise/unrelated results
 
 const OFFSCREEN_URL = "offscreen.html";
 
@@ -58,7 +58,7 @@ async function embedText(text) {
  * @param {string} text
  * @param {number} [chunkSize=500]   Characters per chunk
  * @param {number} [overlap=100]     Overlap between consecutive chunks
- * @param {number} [maxChunks=5]     Hard cap — keeps embedding time bounded
+ * @param {number} [maxChunks=5]     Hard cap ï¿½ keeps embedding time bounded
  * @returns {string[]}
  */
 function splitIntoChunks(text, chunkSize = 500, overlap = 100, maxChunks = 5) {
@@ -114,7 +114,7 @@ async function handlePageCaptured(payload) {
   const fullText   = title ? `${title}. ${text}` : text;
   const rawChunks  = splitIntoChunks(fullText);
 
-  // Embed each chunk — each gets its own 384-float semantic vector.
+  // Embed each chunk ï¿½ each gets its own 384-float semantic vector.
   const chunks = [];
   for (const chunkText of rawChunks) {
     const vector = await embedText(chunkText);
@@ -200,7 +200,7 @@ async function handleSearch(query, filters = {}) {
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.filter(r => r.score >= MIN_SCORE).slice(0, 8);
+  return scored.filter(r => r.score >= MIN_SCORE).slice(0, 5);
 }
 
 // -- Lifecycle -------------------------------------------------------------

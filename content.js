@@ -21,7 +21,15 @@
     ".sidebar", ".side-bar", ".menu", ".navbox",
     ".vector-menu", ".mw-jump-link", "#mw-navigation",
     ".navbar", ".breadcrumb", ".pagination",
-    "[aria-hidden='true']"
+    "[aria-hidden='true']",
+    // Wikipedia-specific noise: language selector, inter-language links,
+    // portal boxes, categories, external-links sections
+    "#p-lang-btn", ".interlanguage-link", ".mw-portlet-lang",
+    ".mw-portlet", "#p-navigation", "#p-interaction",
+    "#p-tb", "#p-coll-print_export", "#p-wikibase-otherprojects",
+    ".catlinks", ".mw-indicators", ".printfooter",
+    ".reflist", ".references", "[class*='lang-list']",
+    "[id*='coordinates']", ".geo-nondefault", ".geo-default"
   ].join(",");
 
   function extractMainText() {
@@ -39,7 +47,20 @@
         if (!parentEl) return NodeFilter.FILTER_REJECT;
         if (NOISE_TAGS.has(parentEl.tagName)) return NodeFilter.FILTER_REJECT;
         if (parentEl.closest(NOISE_SELECTOR)) return NodeFilter.FILTER_REJECT;
-        if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+        const txt = node.textContent;
+        if (!txt || !txt.trim()) return NodeFilter.FILTER_REJECT;
+
+        // Reject nodes that are mostly non-Latin characters.
+        // These are language-name dumps from Wikipedia's language selector
+        // (e.g. "Afrikaans Shqip Азәрбајҹанҹаджа Български...").
+        // If more than 35% of word characters are outside the basic Latin
+        // + extended Latin + common punctuation range, skip the node.
+        const wordChars = txt.replace(/\s/g, "");
+        if (wordChars.length > 20) {
+          const nonLatin = (txt.match(/[^\u0000-\u024F\s]/g) || []).length;
+          if (nonLatin / wordChars.length > 0.35) return NodeFilter.FILTER_REJECT;
+        }
+
         return NodeFilter.FILTER_ACCEPT;
       }
     });
